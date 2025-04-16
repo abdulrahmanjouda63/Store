@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
 using Domain.Contracts;
 using Domain.Models;
 using Services.Abstractions;
+using Services.Specifications;
 using Shared;
 
 namespace Services
@@ -14,20 +16,28 @@ namespace Services
     public class ProductService(IUnitOfWork _unitOfWork, IMapper mapper) : IProductService
     {
 
-        public async Task<IEnumerable<ProductResultDto>> GetAllProductsAsync()
+        public async Task<PaginationResponse<ProductResultDto>> GetAllProductsAsync(ProductSpecificationsParameters specParameters)
         {
+            var spec = new ProductWithBrandsAndTypesSpecifications(specParameters);
             // Get All Products Through ProductRepository
 
-            var products = await _unitOfWork.GetRepository<Product, int>().GetAllAsync();
+            var products = await _unitOfWork.GetRepository<Product, int>().GetAllAsync(spec);
+
+            var specCount = new ProductWithCountSpecifications(specParameters);
+
+            var count = await _unitOfWork.GetRepository<Product, int>().CountAsync(specCount);
+
+            //var count = products.Count();
 
             // Mapping IEnumerable<Product> to IEnumerable<ProductResultDto> : Automapper
 
             var result = mapper.Map<IEnumerable<ProductResultDto>>(products);
-            return result;
+            return new PaginationResponse<ProductResultDto>(specParameters.PageIndex, specParameters.PageSize, count, result);
 
         }
         public async Task<ProductResultDto?> GetProductByIdAsync(int id)
         {
+            var spec = new ProductWithBrandsAndTypesSpecifications(id);
             var product = await _unitOfWork.GetRepository<Product, int>().GetAsync(id);
             if (product is null)
             {
