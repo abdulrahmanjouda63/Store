@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
 using Domain.Contracts;
+using Domain.Exceptions;
 using Domain.Models;
 using Services.Abstractions;
 using Services.Specifications;
@@ -41,7 +42,7 @@ namespace Services
             var product = await _unitOfWork.GetRepository<Product, int>().GetAsync(id);
             if (product is null)
             {
-                return null;
+                throw new ProductNotFoundExceptions(id);
             }
             var result = mapper.Map<ProductResultDto>(product);
             return result;
