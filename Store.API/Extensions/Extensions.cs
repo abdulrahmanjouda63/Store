@@ -1,6 +1,9 @@
 ﻿using Domain.Contracts;
+using Domain.Models.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Persistence;
+using Persistence.Identity;
 using Services;
 using Shared.ErrorModels;
 using Store.API.Middlewares;
@@ -12,6 +15,7 @@ namespace Store.API.Extensions
         public static IServiceCollection RegisterServices(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddBuiltInServices();
+            services.AddIdentityServices();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             services.AddSwaggerServices();
 
@@ -24,6 +28,12 @@ namespace Store.API.Extensions
         private static IServiceCollection AddBuiltInServices(this IServiceCollection services)
         {
             services.AddControllers();
+            return services;
+        }
+        private static IServiceCollection AddIdentityServices(this IServiceCollection services)
+        {
+            services.AddIdentity<AppUser, IdentityRole>()
+               .AddEntityFrameworkStores<StoreIdentityDbContext>();
             return services;
         }
         private static IServiceCollection AddSwaggerServices(this IServiceCollection services)
