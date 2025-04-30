@@ -6,8 +6,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Exceptions
 {
-    public class ValidationExceptions(IEnumerable<string> errors) : Exception("Validation Errors")
+    public class ProductNotFoundException(int id) : NotFoundException($"Product with id {id} not found")
     {
-        public IEnumerable<string> Errors { get; } = errors;
     }
 }
