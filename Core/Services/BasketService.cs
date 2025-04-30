@@ -17,7 +17,7 @@ namespace Services
         public async Task<BasketDto?> GetBasketAsync(string id)
         {
             var basket = await basketRepository.GetBasketAsync(id);
-            if (basket == null) throw new BasketNotFoundExceptions(id);
+            if (basket == null) throw new BasketNotFoundException(id);
             var result =mapper.Map<BasketDto>(basket);
             return result;
         }
@@ -26,7 +26,7 @@ namespace Services
         {
             var basket = mapper.Map<CustomerBasket>(basketDto);
             basket = await basketRepository.UpdateBasketAsync(basket);
-            if (basket is null) throw new BasketCreateOrUpdateBadRequestExceptions();
+            if (basket is null) throw new BasketCreateOrUpdateBadRequestException();
             var result = mapper.Map<BasketDto>(basket);
             return result;
 

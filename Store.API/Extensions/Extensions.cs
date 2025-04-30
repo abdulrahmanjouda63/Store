@@ -1,12 +1,17 @@
 ﻿using Domain.Contracts;
 using Domain.Models.Identity;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Persistence;
 using Persistence.Identity;
 using Services;
+using Shared;
 using Shared.ErrorModels;
 using Store.API.Middlewares;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.Extensions.Configuration;
 
 namespace Store.API.Extensions
 {
@@ -15,14 +20,17 @@ namespace Store.API.Extensions
         public static IServiceCollection RegisterServices(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddBuiltInServices();
-            services.AddIdentityServices();
+
+            services.ConfigureServices();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             services.AddSwaggerServices();
 
             services.AddInfrastructureServices(configuration);
-            services.AddApplicationServices();
+            services.AddIdentityServices();
+            services.AddApplicationServices(configuration);
+            services.ConfigureJwtServices(configuration);
 
-            services.ConfigureServices();
+
             return services;
         }
         private static IServiceCollection AddBuiltInServices(this IServiceCollection services)
@@ -64,6 +72,36 @@ namespace Store.API.Extensions
             });
             return services;
         }
+        private static IServiceCollection ConfigureJwtServices(this IServiceCollection services, IConfiguration configuration)
+        {
+            var jwtOptions = configuration.GetSection("JwtOptions").Get<JwtOptions>();
+
+            if (jwtOptions == null)
+            {
+                throw new InvalidOperationException("JwtOptions section is missing or not configured properly in appsettings.json.");
+            }
+
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = jwtOptions.Issuer,
+                    ValidAudience = jwtOptions.Audience,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SecretKey))
+                };
+            });
+
+            return services;
+        }
+
         public static async Task<WebApplication> ConfigureMiddlewares(this WebApplication app)
         {
 
@@ -89,6 +127,7 @@ namespace Store.API.Extensions
 
             app.UseHttpsRedirection();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
 

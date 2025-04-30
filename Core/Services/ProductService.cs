@@ -42,7 +42,7 @@ namespace Services
             var product = await _unitOfWork.GetRepository<Product, int>().GetAsync(id);
             if (product is null)
             {
-                throw new ProductNotFoundExceptions(id);
+                throw new ProductNotFoundException(id);
             }
             var result = mapper.Map<ProductResultDto>(product);
             return result;

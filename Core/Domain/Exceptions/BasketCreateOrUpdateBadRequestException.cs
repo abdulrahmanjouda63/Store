@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Domain.Exceptions
 {
-    public class BasketCreateOrUpdateBadRequestExceptions()
+    public class BasketCreateOrUpdateBadRequestException()
         : BadRequestException($"Invalid Operation When Create Or Update Basket")
     {
 
